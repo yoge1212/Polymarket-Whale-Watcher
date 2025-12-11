@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: whale-watcher-backend
+    restart: unless-stopped
+    ports:
+      - "5001:5001"
+    env_file:
+      - ./.env
+    
+    volumes:
+      - ./backend:/app
+    networks:
+      - whale-watcher-network
+  
+  watcher:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: whale-watcher-worker
+    restart: unless-stopped
+    env_file:
+      - ./.env
+    command: ["python", "whale_watcher.py"]
+    networks:
+      - whale-watcher-network
+
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: whale-watcher-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    networks:
+      - whale-watcher-network
+    depends_on:
+      - backend
+
+networks:
+  whale-watcher-network:
+    driver: bridge
+
